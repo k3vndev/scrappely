@@ -1,5 +1,6 @@
 import asyncio
 import sys
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from playwright.sync_api import Error as PlaywrightError
@@ -28,7 +29,10 @@ def _fetch_page_content(url: str) -> str:
 
 
 @app.get("/")
-async def root(url: HttpUrl):
+async def root(url: Optional[HttpUrl] = None):
+    if url is None:
+        return {"message": "Hello! Please provide a URL as a query parameter."}
+
     try:
         content = await asyncio.to_thread(_fetch_page_content, str(url))
 
