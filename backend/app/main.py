@@ -1,4 +1,5 @@
 import asyncio
+import os
 import sys
 from typing import Optional
 
@@ -16,9 +17,23 @@ if sys.platform == "win32" and hasattr(asyncio, "WindowsProactorEventLoopPolicy"
 app = FastAPI()
 
 
+def _get_playwright_executable_path() -> Optional[str]:
+    executable_path = os.getenv("PLAYWRIGHT_EXECUTABLE_PATH")
+    if executable_path is None:
+        return None
+
+    normalized_path = executable_path.strip()
+    return normalized_path or None
+
+
 def _fetch_page_content(url: str) -> str:
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        executable_path = _get_playwright_executable_path()
+        launch_kwargs = {"headless": True}
+        if executable_path is not None:
+            launch_kwargs["executable_path"] = executable_path
+
+        browser = p.chromium.launch(**launch_kwargs)
         try:
             page = browser.new_page()
             page.goto(url, timeout=10000)
